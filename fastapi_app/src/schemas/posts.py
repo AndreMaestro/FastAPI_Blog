@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from schemas.users import User
+from .users import User
 
 
 class PostRequestSchema(BaseModel):
