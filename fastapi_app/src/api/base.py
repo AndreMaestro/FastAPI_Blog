@@ -1,7 +1,4 @@
-from http.client import responses, HTTPResponse
-
 from fastapi import APIRouter, status, HTTPException
-from fastapi.openapi.utils import status_code_ranges
 
 from ..schemas.posts import PostCreateSchema, PostUpdateSchema, PostResponseSchema
 
