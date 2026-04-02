@@ -1,8 +1,9 @@
+import sys
+from pathlib import Path
 import asyncio
 import uvicorn
-
-from src.app import create_app
-
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+from app import create_app 
 app = create_app()
 
 
