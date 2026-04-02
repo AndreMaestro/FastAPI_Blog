@@ -1,40 +1,29 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
-from .locations import LocationSchema
-from .categories import CategorySchema
+from .categories import CategoryResponseSchema
+from .locations import LocationResponseSchema
+from .users import UserSchema
 
 
-class PostCreateSchema(BaseModel):
+class PostBaseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     title: str = Field(..., max_length=256, description='Заголовок')
     text: str = Field(..., description='Текст')
+    location: LocationResponseSchema | None = Field(None, description='Местоположение')
+    category: CategoryResponseSchema | None = Field(None, description='Категория')
+    image: str | None = Field(None, description="Image")
+
+class PostCreateSchema(PostBaseSchema):
     pub_date: datetime = Field(..., description='Дата и время публикации')
     author: int = Field(..., description='Автор публикации')
-    location: LocationSchema | None = Field(None, description='Местоположение')
-    category: CategorySchema | None = Field(None, description='Категория')
-    # image
-    is_published: bool = Field(default=True, description='Опубликовано')
-    created_at: datetime = Field(
-        default=datetime.now(),
-        description='Дата и время создания'
-    )
 
+class PostUpdateSchema(PostBaseSchema):
+    is_published: bool | None = Field(None, description='Опубликовано')
 
-class PostUpdateSchema(BaseModel):
-    title: str = Field(..., max_length=256, description='Заголовок')
-    text: str = Field(..., description='Текст')
-    location: LocationSchema | None = Field(None, description='Местоположение')
-    category: CategorySchema | None = Field(None, description='Категория')
-    is_published: bool = Field(default=True, description='Опубликовано')
-
-
-class PostResponseSchema(BaseModel):
+class PostResponseSchema(PostBaseSchema):
     id: int = Field(..., description='ID')
-    title: str = Field(..., max_length=256, description='Заголовок')
-    text: str = Field(..., description='Текст')
     pub_date: datetime = Field(..., description='Дата и время публикации')
-    author: int = Field(..., description='Автор публикации')
-    location: LocationSchema | None = Field(None, description='Местоположение')
-    category: CategorySchema | None = Field(None, description='Категория')
-    # image
-    is_published: bool = Field(default=True, description='Опубликовано')
+    author: UserSchema = Field(..., description='Автор публикации')
+    is_published: bool = Field(..., description='Опубликовано')
+    created_at: datetime = Field(..., description='Дата и время создания')

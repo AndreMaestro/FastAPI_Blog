@@ -1,8 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 
-class CommentSchema(BaseModel):
+class CommentCreateSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    author: int = Field(..., description='Автор комментария')
+    post: int = Field(..., description='Публикация')
+    text: str = Field(description='Текст комментария')
+
+
+class CommentUpdateSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    text: str = Field(description='Текст комментария')
+
+
+class CommentResponseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int = Field(..., description='ID')
     author: int = Field(..., description='Автор комментария')
     post: int = Field(..., description='Публикация')
     text: str = Field(description='Текст комментария')
