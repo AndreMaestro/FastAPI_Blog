@@ -32,3 +32,4 @@ class CategoryResponseSchema(BaseModel):
         description='Идентификатор, разрешены символы латиницы, цифры, дефис и подчёркивание.'
     )
     created_at: datetime = Field(..., description='Дата и время создания')
+    is_published: bool | None = Field(None, description='Опубликовано')

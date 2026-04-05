@@ -23,4 +23,4 @@ class Post(Base):
     author: Mapped["User"] = relationship(back_populates="posts")
     category: Mapped["Category | None"] = relationship(back_populates="posts")
     location: Mapped["Location | None"] = relationship(back_populates="posts")
-    comments: Mapped[list["Comment"]] = relationship(back_populates="posts")
+    comments: Mapped[list["Comment"]] = relationship(back_populates="post")

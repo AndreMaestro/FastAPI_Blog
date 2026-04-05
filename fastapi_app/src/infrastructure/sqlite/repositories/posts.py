@@ -36,4 +36,4 @@ class PostRepository(BaseRepository[Post]):
             )
             .where(self._model.id == post_id)
         )
-        return query.scalar()
+        return query.first()

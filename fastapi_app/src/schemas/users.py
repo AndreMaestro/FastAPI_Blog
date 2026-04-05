@@ -5,7 +5,7 @@ from typing import Optional
 class UserSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    login:str
+    username:str
     first_name: Optional[str]
     last_name: Optional[str]
     email: Optional[str]

@@ -10,13 +10,14 @@ class PostBaseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     title: str = Field(..., max_length=256, description='Заголовок')
     text: str = Field(..., description='Текст')
-    location: LocationResponseSchema | None = Field(None, description='Местоположение')
-    category: CategoryResponseSchema | None = Field(None, description='Категория')
+    location_id: int | None = Field(None, description='Местоположение')
+    category_id: int | None = Field(None, description='Категория')
     image: str | None = Field(None, description="Image")
 
 class PostCreateSchema(PostBaseSchema):
     pub_date: datetime = Field(..., description='Дата и время публикации')
-    author: int = Field(..., description='Автор публикации')
+    author_id: int = Field(..., description='Автор публикации')
+    is_published: bool | None = Field(None, description='Опубликовано')
 
 class PostUpdateSchema(PostBaseSchema):
     is_published: bool | None = Field(None, description='Опубликовано')
