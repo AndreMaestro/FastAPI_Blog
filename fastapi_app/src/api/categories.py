@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, status, Depends, Query
+from fastapi import APIRouter, status, Depends, Query, HTTPException
 
 from schemas.categories import CategoryResponseSchema, CategoryCreateSchema, CategoryUpdateSchema
 from domain.category.use_cases.get_category_by_slug import GetCategoryBySlugUseCase
@@ -8,8 +8,21 @@ from domain.category.use_cases.create_category import CreateCategoryUseCase
 from domain.category.use_cases.update_category import UpdateCategoryUseCase
 from domain.category.use_cases.delete_category import DeleteCategoryUseCase
 from domain.category.use_cases.get_all_categories import GetAllCategoriesUseCase
+from core.exceptions.domain_exceptions import (
+    CategorySlugIsNotUniqueException,
+    CategoryNotFoundByIdException,
+    CategoryNotFoundBySlugException
+)
 
-from api.depends import get_get_category_by_slug_use_case, get_get_category_by_id_use_case, get_create_category_use_case, get_update_category_use_case, get_delete_category_use_case, get_get_all_categories_use_case
+
+from api.depends import (
+    get_get_category_by_slug_use_case,
+    get_get_category_by_id_use_case,
+    get_create_category_use_case,
+    get_update_category_use_case,
+    get_delete_category_use_case,
+    get_get_all_categories_use_case
+)
 
 router = APIRouter()
 
@@ -27,7 +40,12 @@ async def get_all_categories(
 async def get_category_by_id(
     category_id: int,
     use_case: GetCategoryByIdUseCase = Depends(get_get_category_by_id_use_case)) -> CategoryResponseSchema:
-    category = await use_case.execute(category_id=category_id)
+    try:
+        category = await use_case.execute(category_id=category_id)
+    except CategoryNotFoundByIdException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
+        )
     return category
 
 
@@ -35,7 +53,12 @@ async def get_category_by_id(
 async def get_category_by_slug(
     slug: str,
     use_case: GetCategoryBySlugUseCase = Depends(get_get_category_by_slug_use_case)) -> CategoryResponseSchema:
-    category = await use_case.execute(slug=slug)
+    try:
+        category = await use_case.execute(slug=slug)
+    except CategoryNotFoundBySlugException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
+        )
     return category
 
 
@@ -43,7 +66,12 @@ async def get_category_by_slug(
 async def create_category(
     dto: CategoryCreateSchema,
     use_case: CreateCategoryUseCase = Depends(get_create_category_use_case)) -> CategoryResponseSchema:
-    category = await use_case.execute(dto=dto)
+    try:
+        category = await use_case.execute(dto=dto)
+    except CategorySlugIsNotUniqueException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=exc.get_detail()
+        )
     return category
 
 
@@ -52,7 +80,12 @@ async def update_category(
     category_id: int,
     dto: CategoryUpdateSchema,
     use_case: UpdateCategoryUseCase = Depends(get_update_category_use_case)) -> CategoryResponseSchema:
-    category = await use_case.execute(category_id=category_id, dto=dto)
+    try:
+        category = await use_case.execute(category_id=category_id, dto=dto)
+    except CategoryNotFoundByIdException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
+        )
     return category
 
 
@@ -60,5 +93,10 @@ async def update_category(
 async def delete_category(
     category_id: int,
     use_case: DeleteCategoryUseCase = Depends(get_delete_category_use_case)) -> dict:
-    await use_case.execute(category_id=category_id)
+    try:
+        await use_case.execute(category_id=category_id)
+    except CategoryNotFoundByIdException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
+        )
     return {'message': 'Category has been deleted'}

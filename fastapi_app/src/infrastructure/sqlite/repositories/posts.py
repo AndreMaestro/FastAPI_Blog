@@ -2,11 +2,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from infrastructure.sqlite.repositories.base import BaseRepository
 from infrastructure.sqlite.models.posts import Post
+from core.exceptions.database_exceptions import PostNotFoundException
 
 
 class PostRepository(BaseRepository[Post]):
     def __init__(self):
-        super().__init__(Post)
+        super().__init__(Post, PostNotFoundException)
 
     def get_all(
         self, session: Session, limit: int = 100, offset: int = 0
@@ -36,4 +37,7 @@ class PostRepository(BaseRepository[Post]):
             )
             .where(self._model.id == post_id)
         )
-        return query.first()
+        post = query.first()
+        if post is None:
+            raise PostNotFoundException()
+        return post

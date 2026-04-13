@@ -11,7 +11,7 @@ class Location(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     is_published: Mapped[bool] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(nullable=False)
 
     posts: Mapped[list["Post"]] = relationship(back_populates="location")
