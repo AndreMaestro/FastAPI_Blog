@@ -8,7 +8,7 @@ from domain.comment.use_cases.update_comment import UpdateCommentUseCase
 from domain.comment.use_cases.delete_comment import DeleteCommentUseCase
 from domain.comment.use_cases.get_all_comments import GetAllCommentsUseCase
 from core.exceptions.domain_exceptions import (
-    CommentNotFoundByIdException
+    CommentNotFoundByIdException, PostNotFoundByIdException, UserNotFoundByIdException
 )
 
 from api.depends import (
@@ -48,7 +48,12 @@ async def get_comment_by_id(
 async def create_comment(
     dto: CommentCreateSchema,
     use_case: CreateCommentUseCase = Depends(get_create_comment_use_case)) -> CommentResponseSchema:
-    comment = await use_case.execute(dto=dto)
+    try:
+        comment = await use_case.execute(dto=dto)
+    except (PostNotFoundByIdException, UserNotFoundByIdException) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.get_detail()
+        )
     return comment
 
 

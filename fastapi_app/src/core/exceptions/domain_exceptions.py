@@ -15,6 +15,15 @@ class UserNotFoundByUsernameException(BaseDomainException):
         super().__init__(detail=self._exception_text_template)
 
 
+class UserNotFoundByIdException(BaseDomainException):
+    _exception_text_template = "Пользователь с ID = {id} не найден"
+
+    def __init__(self, id: int) -> None:
+        self._exception_text_template = self._exception_text_template.format(id=id)
+
+        super().__init__(detail=self._exception_text_template)
+
+
 class PostNotFoundByIdException(BaseDomainException):
     _exception_text_template = "Пост с ID = {id} не найден"
 
