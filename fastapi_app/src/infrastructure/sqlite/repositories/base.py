@@ -14,6 +14,7 @@ class BaseRepository(Generic[ModelType]):
     def create(self, session: Session, **data) -> ModelType:
         query = insert(self._model).values(**data).returning(self._model)
         obj = session.scalar(query)
+        session.flush()
         return obj
 
     def get_by_id(self, session: Session, id: int) -> ModelType:
@@ -35,6 +36,7 @@ class BaseRepository(Generic[ModelType]):
         for key, value in data.items():
             if hasattr(obj, key):
                 setattr(obj, key, value)
+        session.flush()
         return obj
 
     def delete(self, session: Session, id: int) -> bool:

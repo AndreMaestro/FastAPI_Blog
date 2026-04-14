@@ -7,11 +7,11 @@ import os
 
 class Database:
     def __init__(self):
-        # BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-        # db_path = os.path.join(BASE_DIR, "db.sqlite3")
-        # self._db_url = f"sqlite:///{db_path}"
-        self._db_url = ("sqlite:///C:/Users/Andrew/Desktop/SSU"
-                       "/3_semestr/Yandex_back/Blogicum4/django_sprint4/blogicum/db.sqlite3")
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+        db_path = os.path.join(BASE_DIR, "db.sqlite3")
+        self._db_url = f"sqlite:///{db_path}"
+        #self._db_url = ("sqlite:///C:/Users/Andrew/Desktop/SSU"
+        #               "/3_semestr/Yandex_back/Blogicum4/django_sprint4/blogicum/db.sqlite3")
         self._engine = create_engine(self._db_url)
 
     @contextmanager

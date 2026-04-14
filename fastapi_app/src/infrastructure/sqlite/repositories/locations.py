@@ -13,4 +13,15 @@ class LocationRepository(BaseRepository[Location]):
         try:
             return super().create(session=session, **data)
         except IntegrityError:
-            raise LocationNameAlreadyExistsException
+            raise LocationNameAlreadyExistsException()
+
+    def update(self, session: Session, id: int, **data) -> Location:
+        try:
+            obj = self.get_by_id(session, id)
+            for key, value in data.items():
+                if hasattr(obj, key):
+                    setattr(obj, key, value)
+            session.flush()
+            return obj
+        except IntegrityError:
+            raise LocationNameAlreadyExistsException()

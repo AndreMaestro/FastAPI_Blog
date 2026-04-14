@@ -69,6 +69,10 @@ async def update_location(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
+    except LocationNameIsNotUniqueException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=exc.get_detail()
+        )
     return location
 
 

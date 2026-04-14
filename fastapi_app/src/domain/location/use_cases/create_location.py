@@ -13,15 +13,15 @@ class CreateLocationUseCase:
         self._repo = LocationRepository()
 
     async def execute(self, dto: LocationCreateUpdateSchema) -> LocationResponseSchema:
-        try:
-            with self._database.session() as session:
+        with self._database.session() as session:
+            try:
                 location = self._repo.create(
                     session=session,
                     name=dto.name,
                     is_published=dto.is_published,
                     created_at=datetime.now(),
                 )
-        except LocationNameAlreadyExistsException:
-            raise LocationNameIsNotUniqueException(dto.name)
+            except LocationNameAlreadyExistsException:
+                raise LocationNameIsNotUniqueException(dto.name)
 
         return LocationResponseSchema.model_validate(obj=location)
