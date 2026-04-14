@@ -1,5 +1,3 @@
-from mako.util import restore__ast
-
 from infrastructure.sqlite.database import database
 from infrastructure.sqlite.repositories.categories import CategoryRepository
 from schemas.categories import CategoryResponseSchema

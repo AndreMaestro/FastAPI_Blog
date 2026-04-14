@@ -16,10 +16,10 @@ class BaseRepository(Generic[ModelType]):
         obj = session.scalar(query)
         return obj
 
-    def get_by_id(self, session: Session, id: int) -> ModelType | None:
+    def get_by_id(self, session: Session, id: int) -> ModelType:
         obj = session.query(self._model).get(id)
         if obj is None:
-            raise self._not_found_exception()
+            raise self._not_found_exception(id)
         return obj
 
     def get_all(
@@ -30,6 +30,8 @@ class BaseRepository(Generic[ModelType]):
 
     def update(self, session: Session, id: int, **data) -> ModelType:
         obj = self.get_by_id(session, id)
+        if obj is None:
+            raise self._not_found_exception(id)
         for key, value in data.items():
             if hasattr(obj, key):
                 setattr(obj, key, value)
@@ -37,7 +39,4 @@ class BaseRepository(Generic[ModelType]):
 
     def delete(self, session: Session, id: int) -> bool:
         obj = self.get_by_id(session, id)
-        if obj is None:
-            return False
         session.delete(obj)
-        return True

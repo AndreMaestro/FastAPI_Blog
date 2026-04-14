@@ -1,5 +1,7 @@
 from infrastructure.sqlite.database import database
 from infrastructure.sqlite.repositories.categories import CategoryRepository
+from core.exceptions.domain_exceptions import CategoryNotFoundByIdException
+from core.exceptions.database_exceptions import CategoryNotFoundException
 
 
 class DeleteCategoryUseCase:
@@ -9,6 +11,9 @@ class DeleteCategoryUseCase:
 
     async def execute(self, category_id: int) -> bool:
         with self._database.session() as session:
-            self._repo.delete(session=session, id=category_id)
+            try:
+                self._repo.delete(session=session, id=category_id)
+            except CategoryNotFoundException:
+                raise CategoryNotFoundByIdException(id=category_id)
 
         return True
