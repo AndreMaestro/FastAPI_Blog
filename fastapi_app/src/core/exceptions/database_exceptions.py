@@ -7,6 +7,10 @@ class UserNotFoundException(BaseDatabaseExceptions):
     pass
 
 
+class UsernameAlreadyExistsException(BaseDatabaseExceptions):
+    pass
+
+
 class CategoryNotFoundException(BaseDatabaseExceptions):
     pass
 

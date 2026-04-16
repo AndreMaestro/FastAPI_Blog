@@ -1,9 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import HTTPException, status
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime
-
-from .categories import CategoryResponseSchema
-from .locations import LocationResponseSchema
-from .users import UserSchema
+from .users import UserResponseSchema
 
 
 class PostBaseSchema(BaseModel):
@@ -14,17 +12,29 @@ class PostBaseSchema(BaseModel):
     category_id: int | None = Field(None, description='Категория')
     image: str | None = Field(None, description="Image")
 
+    @field_validator("title", mode='after')
+    @staticmethod
+    def validate_title(title: str) -> str:
+        if not title.strip():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Заголовок поста не должен состоять только из пробелов"
+            )
+        return title
+
+
 class PostCreateSchema(PostBaseSchema):
-    pub_date: datetime = Field(default_factory=datetime.today(), description='Дата и время публикации')
+    pub_date: datetime = Field(default_factory=datetime.today, description='Дата и время публикации')
     author_id: int = Field(..., description='Автор публикации')
     is_published: bool | None = Field(None, description='Опубликовано')
 
 class PostUpdateSchema(PostBaseSchema):
     is_published: bool | None = Field(None, description='Опубликовано')
 
+
 class PostResponseSchema(PostBaseSchema):
     id: int = Field(..., description='ID')
     pub_date: datetime = Field(..., description='Дата и время публикации')
-    author: UserSchema = Field(..., description='Автор публикации')
+    author: UserResponseSchema = Field(..., description='Автор публикации')
     is_published: bool = Field(..., description='Опубликовано')
     created_at: datetime = Field(..., description='Дата и время создания')

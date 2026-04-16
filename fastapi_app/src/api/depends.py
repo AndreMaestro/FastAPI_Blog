@@ -1,5 +1,9 @@
 # User
 from domain.user.use_cases.get_user_by_username import GetUserByUsernameUseCase
+from domain.user.use_cases.create_user import CreateUserUseCase
+from domain.user.use_cases.update_user import UpdateUserUseCase
+from domain.user.use_cases.delete_user import DeleteUserUseCase
+from domain.user.use_cases.get_all_users import GetAllUsersUseCase
 
 # Category
 from domain.category.use_cases.get_category_by_slug import GetCategoryBySlugUseCase
@@ -34,6 +38,18 @@ from domain.comment.use_cases.get_all_comments import GetAllCommentsUseCase
 # User factories
 def get_get_user_by_username_use_case() -> GetUserByUsernameUseCase:
     return GetUserByUsernameUseCase()
+
+def get_create_user_use_case() -> CreateUserUseCase:
+    return CreateUserUseCase()
+
+def get_update_user_use_case() -> UpdateUserUseCase:
+    return UpdateUserUseCase()
+
+def get_delete_user_use_case() -> DeleteUserUseCase:
+    return DeleteUserUseCase()
+
+def get_get_all_users_use_case() -> GetAllUsersUseCase:
+    return GetAllUsersUseCase()
 
 
 # Category factories

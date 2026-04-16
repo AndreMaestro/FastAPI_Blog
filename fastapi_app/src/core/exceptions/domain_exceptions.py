@@ -24,6 +24,15 @@ class UserNotFoundByIdException(BaseDomainException):
         super().__init__(detail=self._exception_text_template)
 
 
+class UserIsNotUniqueByUsernameException(BaseDomainException):
+    _exception_text_template = "Пользователь с username = {usename} уже зарегистрирован"
+
+    def __init__(self, username: str) -> None:
+        self._exception_text_template = self._exception_text_template.format(username=username)
+
+        super().__init__(detail=self._exception_text_template)
+
+
 class PostNotFoundByIdException(BaseDomainException):
     _exception_text_template = "Пост с ID = {id} не найден"
 
