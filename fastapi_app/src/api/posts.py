@@ -10,7 +10,8 @@ from domain.post.use_cases.get_all_posts import GetAllPostsUseCase
 from core.exceptions.domain_exceptions import (
     PostNotFoundByIdException,
     CategoryNotFoundByIdException,
-    LocationNotFoundByIdException
+    LocationNotFoundByIdException,
+    UserNotFoundByIdException
 )
 
 from api.depends import (
@@ -52,7 +53,7 @@ async def create_post(
     use_case: CreatePostUseCase = Depends(get_create_post_use_case)) -> PostResponseSchema:
     try:
         post = await use_case.execute(dto=dto)
-    except(CategoryNotFoundByIdException, LocationNotFoundByIdException) as exc:
+    except(CategoryNotFoundByIdException, LocationNotFoundByIdException, UserNotFoundByIdException) as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.get_detail()
         )

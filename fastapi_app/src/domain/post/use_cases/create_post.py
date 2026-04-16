@@ -3,14 +3,17 @@ from infrastructure.sqlite.database import database
 from infrastructure.sqlite.repositories.posts import PostRepository
 from infrastructure.sqlite.repositories.locations import LocationRepository
 from infrastructure.sqlite.repositories.categories import CategoryRepository
+from infrastructure.sqlite.repositories.users import UserRepository
 from schemas.posts import PostResponseSchema, PostCreateSchema
 from core.exceptions.domain_exceptions import (
     LocationNotFoundByIdException,
     CategoryNotFoundByIdException,
+    UserNotFoundByIdException
 )
 from core.exceptions.database_exceptions import(
     CategoryNotFoundException,
-    LocationNotFoundException
+    LocationNotFoundException,
+    UserNotFoundException
 )
 
 class CreatePostUseCase:
@@ -19,6 +22,7 @@ class CreatePostUseCase:
         self._repo = PostRepository()
         self._location_repo = LocationRepository()
         self._category_repo = CategoryRepository()
+        self._user_repo = UserRepository()
 
     async def execute(self, dto: PostCreateSchema) -> PostResponseSchema:
         with self._database.session() as session:
@@ -31,6 +35,11 @@ class CreatePostUseCase:
                 self._location_repo.get_by_id(session, dto.location_id)
             except LocationNotFoundException:
                 raise LocationNotFoundByIdException(dto.location_id)
+
+            try:
+                self._user_repo.get_by_id(session, dto.author_id)
+            except UserNotFoundException:
+                raise UserNotFoundByIdException(dto.author_id)
 
             post = self._repo.create(
                 session=session,
