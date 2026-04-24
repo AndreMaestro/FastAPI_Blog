@@ -19,6 +19,8 @@ from api.depends import (
     get_delete_location_use_case,
     get_get_all_locations_use_case
 )
+from services.auth import AuthService
+
 
 router = APIRouter()
 
@@ -48,7 +50,14 @@ async def get_location_by_id(
 @router.post('/location', status_code=status.HTTP_201_CREATED, response_model=LocationResponseSchema)
 async def create_location(
     dto: LocationCreateUpdateSchema,
+    current_user = Depends(AuthService.get_current_user),
     use_case: CreateLocationUseCase = Depends(get_create_location_use_case)) -> LocationResponseSchema:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только администратор может создавать локации"
+        )
+
     try:
         location = await use_case.execute(dto=dto)
     except LocationNameIsNotUniqueException as exc:
@@ -62,7 +71,13 @@ async def create_location(
 async def update_location(
     location_id: int,
     dto: LocationCreateUpdateSchema,
+    current_user = Depends(AuthService.get_current_user),
     use_case: UpdateLocationUseCase = Depends(get_update_location_use_case)) -> LocationResponseSchema:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только администратор может обновлять локации"
+        )
     try:
         location = await use_case.execute(location_id=location_id, dto=dto)
     except LocationNotFoundByIdException as exc:
@@ -79,7 +94,14 @@ async def update_location(
 @router.delete('/location/{location_id}', status_code=status.HTTP_200_OK)
 async def delete_location(
     location_id: int,
+    current_user = Depends(AuthService.get_current_user),
     use_case: DeleteLocationUseCase = Depends(get_delete_location_use_case)) -> dict:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только администратор может удалять локации"
+        )
+    
     try:
         await use_case.execute(location_id=location_id)
     except LocationNotFoundByIdException as exc:

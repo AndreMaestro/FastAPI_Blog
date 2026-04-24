@@ -23,6 +23,8 @@ from api.depends import (
     get_delete_category_use_case,
     get_get_all_categories_use_case
 )
+from services.auth import AuthService
+
 
 router = APIRouter()
 
@@ -65,7 +67,13 @@ async def get_category_by_slug(
 @router.post('/category', status_code=status.HTTP_201_CREATED, response_model=CategoryResponseSchema)
 async def create_category(
     dto: CategoryCreateSchema,
+    current_user = Depends(AuthService.get_current_user),
     use_case: CreateCategoryUseCase = Depends(get_create_category_use_case)) -> CategoryResponseSchema:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только администратор может создавать категории"
+        )
     try:
         category = await use_case.execute(dto=dto)
     except CategorySlugIsNotUniqueException as exc:
@@ -79,7 +87,14 @@ async def create_category(
 async def update_category(
     category_id: int,
     dto: CategoryUpdateSchema,
+    current_user = Depends(AuthService.get_current_user),
     use_case: UpdateCategoryUseCase = Depends(get_update_category_use_case)) -> CategoryResponseSchema:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только администратор может обновлять категории"
+        )
+
     try:
         category = await use_case.execute(category_id=category_id, dto=dto)
     except CategoryNotFoundByIdException as exc:
@@ -92,7 +107,14 @@ async def update_category(
 @router.delete('/category/{category_id}', status_code=status.HTTP_200_OK)
 async def delete_category(
     category_id: int,
+    current_user = Depends(AuthService.get_current_user),
     use_case: DeleteCategoryUseCase = Depends(get_delete_category_use_case)) -> dict:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только администратор может удалять категории"
+        )
+
     try:
         await use_case.execute(category_id=category_id)
     except CategoryNotFoundByIdException as exc:

@@ -6,6 +6,13 @@ class BaseDomainException(Exception):
         return self._detail
 
 
+class WrongPasswordException(BaseDomainException):
+    _exception_text = 'Неверный пароль'
+
+    def __init__(self):
+        super().__init__(detail=self._exception_text)
+
+
 class UserNotFoundByUsernameException(BaseDomainException):
     _exception_text_template = "Пользователь с юзернеймом {username} не найден"
 

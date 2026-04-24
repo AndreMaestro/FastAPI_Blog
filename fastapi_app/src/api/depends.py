@@ -34,6 +34,9 @@ from domain.comment.use_cases.update_comment import UpdateCommentUseCase
 from domain.comment.use_cases.delete_comment import DeleteCommentUseCase
 from domain.comment.use_cases.get_all_comments import GetAllCommentsUseCase
 
+# Auth
+from domain.auth.use_cases.authenticate_user import AuthenticateUserUseCase
+from domain.auth.use_cases.create_access_token import CreateAccessTokenUseCase
 
 # User factories
 def get_get_user_by_username_use_case() -> GetUserByUsernameUseCase:
@@ -138,3 +141,12 @@ def get_delete_comment_use_case() -> DeleteCommentUseCase:
 
 def get_get_all_comments_use_case() -> GetAllCommentsUseCase:
     return GetAllCommentsUseCase()
+
+
+# Auth factories
+def authenticate_user_use_case() -> AuthenticateUserUseCase:
+    return AuthenticateUserUseCase()
+
+
+def create_access_token_use_case() -> CreateAccessTokenUseCase:
+    return CreateAccessTokenUseCase()

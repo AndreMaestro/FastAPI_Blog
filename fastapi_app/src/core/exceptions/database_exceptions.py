@@ -3,6 +3,14 @@ class BaseDatabaseExceptions(Exception):
         self._detail = detail
 
 
+class EntityNotFoundException(BaseDatabaseExceptions):
+    pass
+
+
+class EntityAlreadyExistsException(BaseDatabaseExceptions):
+    pass
+
+
 class UserNotFoundException(BaseDatabaseExceptions):
     pass
 

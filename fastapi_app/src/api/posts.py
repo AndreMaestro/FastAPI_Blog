@@ -7,6 +7,7 @@ from domain.post.use_cases.create_post import CreatePostUseCase
 from domain.post.use_cases.update_post import UpdatePostUseCase
 from domain.post.use_cases.delete_post import DeletePostUseCase
 from domain.post.use_cases.get_all_posts import GetAllPostsUseCase
+from services.auth import AuthService
 from core.exceptions.domain_exceptions import (
     PostNotFoundByIdException,
     CategoryNotFoundByIdException,
@@ -50,7 +51,9 @@ async def get_post_by_id(
 @router.post('/post', status_code=status.HTTP_201_CREATED, response_model=PostResponseSchema)
 async def create_post(
     dto: PostCreateSchema,
+    current_user = Depends(AuthService.get_current_user),
     use_case: CreatePostUseCase = Depends(get_create_post_use_case)) -> PostResponseSchema:
+    dto.author_id = current_user.id
     try:
         post = await use_case.execute(dto=dto)
     except(CategoryNotFoundByIdException, LocationNotFoundByIdException, UserNotFoundByIdException) as exc:
@@ -64,13 +67,23 @@ async def create_post(
 async def update_post(
     post_id: int,
     dto: PostUpdateSchema,
+    current_user = Depends(AuthService.get_current_user),
+    get_post_use_case: GetPostByIdUseCase = Depends(get_get_post_by_id_use_case),
     use_case: UpdatePostUseCase = Depends(get_update_post_use_case)) -> PostResponseSchema:
     try:
-        post = await use_case.execute(post_id=post_id, dto=dto)
+        existing_post = await get_post_use_case.execute(post_id=post_id)
     except PostNotFoundByIdException as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=exc.get_detail()
         )
+    if existing_post.author.id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Вы не можете обновить этот пост'
+        )
+    try:
+        post = await use_case.execute(post_id=post_id, dto=dto)
     except (CategoryNotFoundByIdException, LocationNotFoundByIdException) as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.get_detail()
@@ -81,11 +94,19 @@ async def update_post(
 @router.delete('/post/{post_id}', status_code=status.HTTP_200_OK)
 async def delete_post(
     post_id: int,
+    current_user = Depends(AuthService.get_current_user),
+    get_post_use_case: GetPostByIdUseCase = Depends(get_get_post_by_id_use_case),
     use_case: DeletePostUseCase = Depends(get_delete_post_use_case)) -> dict:
     try:
-        await use_case.execute(post_id=post_id)
+        existing_post = await get_post_use_case.execute(post_id=post_id)
     except PostNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
+    if existing_post.author.id != current_user.id and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Вы не можете удалить этот пост'
+        )
+    await use_case.execute(post_id=post_id)
     return {'message': 'Post has been deleted'}
