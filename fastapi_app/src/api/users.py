@@ -94,7 +94,7 @@ async def delete_user(
         current_user = Depends(AuthService.get_current_user),
         use_case: DeleteUserUseCase = Depends(get_delete_user_use_case)
 ) -> None:
-    if user_id != current_user.id:
+    if user_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail= "Вы не можете удалять чужого пользователя"
