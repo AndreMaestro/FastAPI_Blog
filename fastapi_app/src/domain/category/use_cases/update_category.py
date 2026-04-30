@@ -1,8 +1,11 @@
 from infrastructure.sqlite.database import database
 from infrastructure.sqlite.repositories.categories import CategoryRepository
 from schemas.categories import CategoryResponseSchema, CategoryUpdateSchema
-from core.exceptions.domain_exceptions import CategoryNotFoundByIdException
+from core.exceptions.domain_exceptions import CategoryNotFoundByIdException, ForbiddenException
 from core.exceptions.database_exceptions import CategoryNotFoundException
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateCategoryUseCase:
@@ -10,7 +13,11 @@ class UpdateCategoryUseCase:
         self._database = database
         self._repo = CategoryRepository()
 
-    async def execute(self, category_id: int, dto: CategoryUpdateSchema) -> CategoryResponseSchema:
+    async def execute(self, category_id: int, dto: CategoryUpdateSchema, is_superuser: bool = False) -> CategoryResponseSchema:
+        if not is_superuser:
+            error = ForbiddenException()
+            logger.error("Только администратор может обновлять категории")
+            raise error
         with self._database.session() as session:
             try:
                 category = self._repo.update(

@@ -9,7 +9,7 @@ from domain.location.use_cases.delete_location import DeleteLocationUseCase
 from domain.location.use_cases.get_all_locations import GetAllLocationsUseCase
 from core.exceptions.domain_exceptions import (
     LocationNotFoundByIdException,
-    LocationNameIsNotUniqueException,
+    LocationNameIsNotUniqueException, ForbiddenException,
 )
 
 from api.depends import (
@@ -52,14 +52,12 @@ async def create_location(
     dto: LocationCreateUpdateSchema,
     current_user = Depends(AuthService.get_current_user),
     use_case: CreateLocationUseCase = Depends(get_create_location_use_case)) -> LocationResponseSchema:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только администратор может создавать локации"
-        )
-
     try:
-        location = await use_case.execute(dto=dto)
+        location = await use_case.execute(dto=dto, is_superuser=current_user.is_superuser)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except LocationNameIsNotUniqueException as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=exc.get_detail()
@@ -73,13 +71,12 @@ async def update_location(
     dto: LocationCreateUpdateSchema,
     current_user = Depends(AuthService.get_current_user),
     use_case: UpdateLocationUseCase = Depends(get_update_location_use_case)) -> LocationResponseSchema:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только администратор может обновлять локации"
-        )
     try:
-        location = await use_case.execute(location_id=location_id, dto=dto)
+        location = await use_case.execute(location_id=location_id, dto=dto, is_superuser=current_user.is_superuser)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except LocationNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
@@ -96,14 +93,12 @@ async def delete_location(
     location_id: int,
     current_user = Depends(AuthService.get_current_user),
     use_case: DeleteLocationUseCase = Depends(get_delete_location_use_case)) -> dict:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только администратор может удалять локации"
-        )
-    
     try:
-        await use_case.execute(location_id=location_id)
+        await use_case.execute(location_id=location_id, is_superuser=current_user.is_superuser)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except LocationNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()

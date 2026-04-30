@@ -10,7 +10,7 @@ from domain.user.use_cases.get_all_users import GetAllUsersUseCase
 from core.exceptions.domain_exceptions import (
     UserNotFoundByUsernameException,
     UserIsNotUniqueByUsernameException,
-    UserNotFoundByIdException
+    UserNotFoundByIdException, ForbiddenException
 )
 from api.depends import (
     get_get_user_by_username_use_case,
@@ -69,14 +69,12 @@ async def update_user(
         current_user=Depends(AuthService.get_current_user),
         use_case: UpdateUserUseCase = Depends(get_update_user_use_case),
 ) -> UserResponseSchema:
-    if user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Вы не можете редактировать другого пользователя"
-        )
-
     try:
-        user = await use_case.execute(user_id=user_id, dto=dto)
+        user = await use_case.execute(user_id=user_id, dto=dto, current_user_id=current_user.id)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except UserNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
@@ -88,22 +86,22 @@ async def update_user(
     return user
 
 
-@router.delete('/user/{user_id}', status_code=status.HTTP_200_OK, response_model=UserResponseSchema)
+@router.delete('/user/{user_id}', status_code=status.HTTP_200_OK, response_model=None)
 async def delete_user(
         user_id: int,
         current_user = Depends(AuthService.get_current_user),
         use_case: DeleteUserUseCase = Depends(get_delete_user_use_case)
 ) -> None:
-    if user_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail= "Вы не можете удалять чужого пользователя"
-        )
-
     try:
-        await use_case.execute(user_id)
+        await use_case.execute(user_id=user_id,
+                               current_user_id=current_user.id,
+                               is_superuser=current_user.is_superuser)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except UserNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
-    return None
+    return {'message': 'User has been deleted'}

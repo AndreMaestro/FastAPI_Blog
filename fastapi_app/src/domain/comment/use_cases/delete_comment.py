@@ -1,7 +1,10 @@
 from infrastructure.sqlite.database import database
 from infrastructure.sqlite.repositories.comments import CommentRepository
-from core.exceptions.domain_exceptions import CommentNotFoundByIdException
+from core.exceptions.domain_exceptions import CommentNotFoundByIdException, ForbiddenException
 from core.exceptions.database_exceptions import CommentNotFoundException
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DeleteCommentUseCase:
@@ -9,7 +12,15 @@ class DeleteCommentUseCase:
         self._database = database
         self._repo = CommentRepository()
 
-    async def execute(self, comment_id: int) -> bool:
+    async def execute(self,
+                      comment_id: int,
+                      author_id: int,
+                      current_user_id: int,
+                      is_superuser: bool = False) -> bool:
+        if author_id != current_user_id and not is_superuser:
+            error = ForbiddenException()
+            logger.error("Только автор комментария или администратор может удалить его")
+            raise error
         with self._database.session() as session:
             try:
                 self._repo.delete(session=session, id=comment_id)

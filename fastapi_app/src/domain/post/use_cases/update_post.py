@@ -8,13 +8,16 @@ from schemas.posts import PostResponseSchema, PostUpdateSchema
 from core.exceptions.domain_exceptions import (
     PostNotFoundByIdException,
     LocationNotFoundByIdException,
-    CategoryNotFoundByIdException
+    CategoryNotFoundByIdException, ForbiddenException
 )
 from core.exceptions.database_exceptions import(
     CategoryNotFoundException,
-    LocationNotFoundException,
-    PostNotFoundException
+    LocationNotFoundException
 )
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class UpdatePostUseCase:
     def __init__(self):
@@ -23,7 +26,16 @@ class UpdatePostUseCase:
         self._location_repo = LocationRepository()
         self._category_repo = CategoryRepository()
 
-    async def execute(self, post_id: int, dto: PostUpdateSchema) -> PostResponseSchema:
+    async def execute(self,
+                      post_id: int,
+                      dto: PostUpdateSchema,
+                      author_id: int,
+                      current_user_id: int) -> PostResponseSchema:
+        if author_id != current_user_id:
+            error = ForbiddenException()
+            logger.error("Только автор поста может обновлять его")
+            raise error
+
         with self._database.session() as session:
             try:
                 self._category_repo.get_by_id(session, dto.category_id)
@@ -45,8 +57,6 @@ class UpdatePostUseCase:
                     category_id=dto.category_id,
                     location_id=dto.location_id,
                 )
-            #except PostNotFoundException:
-            #    raise PostNotFoundByIdException(post_id)
             except IntegrityError:
                 raise PostNotFoundByIdException(post_id)
 

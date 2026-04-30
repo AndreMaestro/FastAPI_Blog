@@ -23,7 +23,7 @@ class AuthService:
         try:
             payload = jwt.decode(
                 token=token,
-                key=SECRET_AUTH_KEY.get_secret_value(),
+                key=SECRET_AUTH_KEY,
                 algorithms=[AUTH_ALGORITHM],
             )
             username: str = payload.get("sub")

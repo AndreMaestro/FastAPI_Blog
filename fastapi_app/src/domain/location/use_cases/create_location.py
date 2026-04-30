@@ -3,8 +3,11 @@ from datetime import datetime
 from infrastructure.sqlite.database import database
 from infrastructure.sqlite.repositories.locations import LocationRepository
 from schemas.locations import LocationResponseSchema, LocationCreateUpdateSchema
-from core.exceptions.domain_exceptions import LocationNameIsNotUniqueException
+from core.exceptions.domain_exceptions import LocationNameIsNotUniqueException, ForbiddenException
 from core.exceptions.database_exceptions import LocationNameAlreadyExistsException
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CreateLocationUseCase:
@@ -12,7 +15,11 @@ class CreateLocationUseCase:
         self._database = database
         self._repo = LocationRepository()
 
-    async def execute(self, dto: LocationCreateUpdateSchema) -> LocationResponseSchema:
+    async def execute(self, dto: LocationCreateUpdateSchema, is_superuser: bool = False) -> LocationResponseSchema:
+        if not is_superuser:
+            error = ForbiddenException()
+            logger.error("Только администратор может создавать локации")
+            raise error
         with self._database.session() as session:
             try:
                 location = self._repo.create(

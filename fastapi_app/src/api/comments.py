@@ -8,7 +8,7 @@ from domain.comment.use_cases.update_comment import UpdateCommentUseCase
 from domain.comment.use_cases.delete_comment import DeleteCommentUseCase
 from domain.comment.use_cases.get_all_comments import GetAllCommentsUseCase
 from core.exceptions.domain_exceptions import (
-    CommentNotFoundByIdException, PostNotFoundByIdException, UserNotFoundByIdException
+    CommentNotFoundByIdException, PostNotFoundByIdException, UserNotFoundByIdException, ForbiddenException
 )
 
 from api.depends import (
@@ -74,13 +74,16 @@ async def update_comment(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
 
-    if existing_comment.author_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Вы не можете обновить этот комментарий"
-        )
     try:
-        comment = await use_case.execute(comment_id=comment_id, dto=dto)
+        comment = await use_case.execute(comment_id=comment_id,
+                                         dto=dto,
+                                         author_id=existing_comment.author_id,
+                                         current_user_id=current_user.id
+        )
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except CommentNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
@@ -101,14 +104,16 @@ async def delete_comment(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
 
-    if existing_comment.author_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Вы не можете удалить этот комментарий"
-        )
-
     try:
-        await use_case.execute(comment_id=comment_id)
+        await use_case.execute(comment_id=comment_id,
+                               author_id=existing_comment.author_id,
+                               current_user_id=current_user.id,
+                               is_superuser=current_user.is_superuser
+        )
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except CommentNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()

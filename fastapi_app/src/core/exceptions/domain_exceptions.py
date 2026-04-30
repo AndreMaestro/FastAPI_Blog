@@ -13,6 +13,13 @@ class WrongPasswordException(BaseDomainException):
         super().__init__(detail=self._exception_text)
 
 
+class ForbiddenException(BaseDomainException):
+    _exception_text = 'Недостаточно прав для выполнения операции'
+
+    def __init__(self):
+        super().__init__(detail=self._exception_text)
+
+
 class UserNotFoundByUsernameException(BaseDomainException):
     _exception_text_template = "Пользователь с юзернеймом {username} не найден"
 

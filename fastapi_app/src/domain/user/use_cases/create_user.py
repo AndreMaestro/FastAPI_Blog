@@ -3,7 +3,7 @@ from infrastructure.sqlite.repositories.users import UserRepository
 from schemas.users import UserCreateSchema, UserResponseSchema
 from core.exceptions.domain_exceptions import UserIsNotUniqueByUsernameException
 from core.exceptions.database_exceptions import UsernameAlreadyExistsException
-
+from resources.auth import get_password_hash
 
 class CreateUserUseCase:
     def __init__(self):
@@ -22,7 +22,7 @@ class CreateUserUseCase:
                     is_staff = dto.is_staff,
                     is_active = dto.is_active,
                     is_superuser = dto.is_superuser,
-                    password = dto.password
+                    password = get_password_hash(dto.password)
                 )
             except UsernameAlreadyExistsException:
                 raise UserIsNotUniqueByUsernameException(dto.username)

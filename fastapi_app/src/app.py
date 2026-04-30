@@ -6,9 +6,11 @@ from api.categories import router as categories_router
 from api.comments import router as comments_router
 from api.locations import router as locations_router
 from api.auth import router as auth_router
-
+from core.logging_config import LoggingConfig
+import logging
 
 def create_app() -> FastAPI:
+    LoggingConfig.setup()
     app = FastAPI(root_path='/api/v1')
     app.add_middleware(
         CORSMiddleware,

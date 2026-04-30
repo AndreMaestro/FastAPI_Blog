@@ -11,7 +11,7 @@ from domain.category.use_cases.get_all_categories import GetAllCategoriesUseCase
 from core.exceptions.domain_exceptions import (
     CategorySlugIsNotUniqueException,
     CategoryNotFoundByIdException,
-    CategoryNotFoundBySlugException
+    CategoryNotFoundBySlugException, ForbiddenException
 )
 
 
@@ -69,13 +69,12 @@ async def create_category(
     dto: CategoryCreateSchema,
     current_user = Depends(AuthService.get_current_user),
     use_case: CreateCategoryUseCase = Depends(get_create_category_use_case)) -> CategoryResponseSchema:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только администратор может создавать категории"
-        )
     try:
-        category = await use_case.execute(dto=dto)
+        category = await use_case.execute(dto=dto, is_superuser=current_user.is_superuser)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except CategorySlugIsNotUniqueException as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=exc.get_detail()
@@ -89,14 +88,16 @@ async def update_category(
     dto: CategoryUpdateSchema,
     current_user = Depends(AuthService.get_current_user),
     use_case: UpdateCategoryUseCase = Depends(get_update_category_use_case)) -> CategoryResponseSchema:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только администратор может обновлять категории"
-        )
-
     try:
-        category = await use_case.execute(category_id=category_id, dto=dto)
+        category = await use_case.execute(
+            category_id=category_id,
+            dto=dto,
+            is_superuser=current_user.is_superuser
+        )
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except CategoryNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
@@ -109,14 +110,12 @@ async def delete_category(
     category_id: int,
     current_user = Depends(AuthService.get_current_user),
     use_case: DeleteCategoryUseCase = Depends(get_delete_category_use_case)) -> dict:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только администратор может удалять категории"
-        )
-
     try:
-        await use_case.execute(category_id=category_id)
+        await use_case.execute(category_id=category_id, is_superuser=current_user.is_superuser)
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except CategoryNotFoundByIdException as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()

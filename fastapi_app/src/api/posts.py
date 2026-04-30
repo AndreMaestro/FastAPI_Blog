@@ -12,7 +12,7 @@ from core.exceptions.domain_exceptions import (
     PostNotFoundByIdException,
     CategoryNotFoundByIdException,
     LocationNotFoundByIdException,
-    UserNotFoundByIdException
+    UserNotFoundByIdException, ForbiddenException
 )
 
 from api.depends import (
@@ -77,13 +77,16 @@ async def update_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=exc.get_detail()
         )
-    if existing_post.author.id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Вы не можете обновить этот пост'
-        )
     try:
-        post = await use_case.execute(post_id=post_id, dto=dto)
+        post = await use_case.execute(post_id=post_id,
+                                      dto=dto,
+                                      author_id=existing_post.author.id,
+                                      current_user_id=current_user.id
+        )
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
     except (CategoryNotFoundByIdException, LocationNotFoundByIdException) as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.get_detail()
@@ -103,10 +106,9 @@ async def delete_post(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
-    if existing_post.author.id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Вы не можете удалить этот пост'
-        )
-    await use_case.execute(post_id=post_id)
+
+    await use_case.execute(post_id=post_id,
+                           author_id=existing_post.author.id,
+                           current_user_id=current_user.id,
+                           is_superuser=current_user.is_superuser)
     return {'message': 'Post has been deleted'}
