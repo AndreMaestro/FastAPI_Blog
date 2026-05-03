@@ -1,6 +1,14 @@
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime
+from typing import List
+
+
+class ImageSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    file_path: str
+    order: int
 
 
 class CommentBaseSchema(BaseModel):
@@ -34,3 +42,4 @@ class CommentResponseSchema(CommentBaseSchema):
         default=datetime.now,
         description='Дата и время создания'
     )
+    images: List[ImageSchema] = Field(default_factory=list, description='Изображения комментария')

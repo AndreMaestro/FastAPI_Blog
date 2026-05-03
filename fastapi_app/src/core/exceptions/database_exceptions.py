@@ -41,3 +41,6 @@ class LocationNotFoundException(BaseDatabaseExceptions):
 
 class LocationNameAlreadyExistsException(BaseDatabaseExceptions):
     pass
+
+class ImageNotFoundException(BaseDatabaseExceptions):
+    pass

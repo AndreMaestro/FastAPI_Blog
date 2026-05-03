@@ -8,10 +8,11 @@ from infrastructure.sqlite.repositories.users import UserRepository
 from resources.auth import oauth2_scheme
 from infrastructure.sqlite.database import database as sqlite_database, Database
 from schemas.users import UserResponseSchema
+from core.config import settings
 
 AUTH_EXCEPTION_MESSAGE = "Невозможно проверить данные авторизации"
 AUTH_ALGORITHM = "HS256"
-SECRET_AUTH_KEY = "secret_str_987654321"
+SECRET_AUTH_KEY = settings.SECRET_AUTH_KEY.get_secret_value()
 
 
 class AuthService:

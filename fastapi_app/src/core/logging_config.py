@@ -3,19 +3,17 @@ import logging
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from typing import Optional
+from .config import settings
+
 
 class LoggingConfig:
-    log_level: str = "ERROR"
     log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     log_date_format: str = "%Y-%m-%d %H:%M:%S"
-    log_file: str = "logs/app.log"
-    max_bytes = 10 * 1024 * 1024
-    backup_count: int = 5
 
     @classmethod
     def setup(cls, log_level: Optional[str] = None, log_file: Optional[str] = None):
-        level = getattr(logging, (log_level or cls.log_level).upper(), logging.ERROR)
-        file_path = log_file or cls.log_file
+        level = getattr(logging, (log_level or settings.LOG_LEVEL).upper(), logging.ERROR)
+        file_path = log_file or settings.LOG_FILE
 
         Path(file_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -31,8 +29,8 @@ class LoggingConfig:
 
         file_handler = RotatingFileHandler(
             filename=file_path,
-            maxBytes=cls.max_bytes,
-            backupCount=cls.backup_count,
+            maxBytes=settings.LOG_MAX_BYTES,
+            backupCount=settings.LOG_BACKUP_COUNT,
             encoding='utf-8'
         )
         file_handler.setLevel(level)

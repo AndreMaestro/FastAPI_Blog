@@ -1,6 +1,9 @@
 from typing import List
-from fastapi import APIRouter, status, Depends, Query, HTTPException
+from fastapi import APIRouter, status, Depends, Query, HTTPException, UploadFile, File
 
+from domain.comment.use_cases.add_comment_images import AddCommentImagesUseCase
+from domain.comment.use_cases.delete_comment_images import DeleteCommentImagesUseCase
+from domain.comment.use_cases.delete_comment_image_by_id import DeleteCommentImageByIdUseCase
 from schemas.comments import CommentResponseSchema, CommentCreateSchema, CommentUpdateSchema
 from domain.comment.use_cases.get_comment_by_id import GetCommentByIdUseCase
 from domain.comment.use_cases.create_comment import CreateCommentUseCase
@@ -16,7 +19,10 @@ from api.depends import (
     get_create_comment_use_case,
     get_update_comment_use_case,
     get_delete_comment_use_case,
-    get_get_all_comments_use_case
+    get_get_all_comments_use_case,
+    get_add_comment_images_use_case,
+    get_delete_comment_images_use_case,
+    get_delete_comment_image_by_id_use_case
 )
 from services.auth import AuthService
 
@@ -119,3 +125,81 @@ async def delete_comment(
             status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
         )
     return {'message': 'Comment has been deleted'}
+
+
+@router.post('/comment/{comment_id}/images', status_code=status.HTTP_200_OK, response_model=CommentResponseSchema)  # ← /images (множественное число)
+async def upload_comment_images(
+    comment_id: int,
+    # Не работает List[UploadFile]
+    images: UploadFile = File(...),
+    current_user = Depends(AuthService.get_current_user),
+    get_comment_use_case: GetCommentByIdUseCase = Depends(get_get_comment_by_id_use_case),
+    use_case: AddCommentImagesUseCase = Depends(get_add_comment_images_use_case)
+) -> CommentResponseSchema:
+    try:
+        existing_comment = await get_comment_use_case.execute(comment_id=comment_id)
+    except CommentNotFoundByIdException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=exc.get_detail()
+        )
+
+    try:
+        list_images = []
+        list_images.append(images)
+        updated_comment = await use_case.execute(
+            comment_id=comment_id,
+            images=list_images,
+            current_user_id=current_user.id,
+            author_id=existing_comment.author_id
+        )
+    except ForbiddenException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=exc.get_detail()
+        )
+    return updated_comment
+
+
+@router.delete('/comment/{comment_id}/images', status_code=status.HTTP_200_OK)
+async def delete_comment_images(
+        comment_id: int,
+        current_user=Depends(AuthService.get_current_user),
+        get_comment_use_case: GetCommentByIdUseCase = Depends(get_get_comment_by_id_use_case),
+        use_case: DeleteCommentImagesUseCase = Depends(get_delete_comment_images_use_case)
+) -> dict:
+    try:
+        existing_comment = await get_comment_use_case.execute(comment_id=comment_id)
+    except CommentNotFoundByIdException as exc:
+        raise HTTPException(status_code=404, detail=exc.get_detail())
+
+    await use_case.execute(
+        comment_id=comment_id,
+        current_user_id=current_user.id,
+        author_id=existing_comment.author_id,
+        is_superuser=current_user.is_superuser
+    )
+
+    return {"message": f"All images for comment {comment_id} have been deleted"}
+
+
+@router.delete('/comment/{comment_id}/images/{image_id}', status_code=status.HTTP_200_OK)
+async def delete_comment_image_by_id(
+        comment_id: int,
+        image_id: int,
+        current_user=Depends(AuthService.get_current_user),
+        get_comment_use_case: GetCommentByIdUseCase = Depends(get_get_comment_by_id_use_case),
+        use_case: DeleteCommentImageByIdUseCase = Depends(get_delete_comment_image_by_id_use_case)
+) -> dict:
+    try:
+        existing_comment = await get_comment_use_case.execute(comment_id=comment_id)
+    except CommentNotFoundByIdException as exc:
+        raise HTTPException(status_code=404, detail=exc.get_detail())
+
+    await use_case.execute(
+        comment_id=comment_id,
+        image_id=image_id,
+        current_user_id=current_user.id,
+        author_id=existing_comment.author_id,
+        is_superuser=current_user.is_superuser
+    )
+
+    return {"message": f"Image {image_id} for comment {comment_id} has been deleted"}

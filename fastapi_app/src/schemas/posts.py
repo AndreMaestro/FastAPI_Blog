@@ -2,6 +2,14 @@ from fastapi import HTTPException, status
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime
 from .users import UserResponseSchema
+from typing import List
+
+
+class ImageSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    file_path: str
+    order: int
 
 
 class PostBaseSchema(BaseModel):
@@ -10,7 +18,6 @@ class PostBaseSchema(BaseModel):
     text: str = Field(min_length=1, description='Текст')
     location_id: int | None = Field(None, description='Местоположение')
     category_id: int | None = Field(None, description='Категория')
-    image: str | None = Field(None, description="Image")
 
     @field_validator("title", mode='after')
     @staticmethod
@@ -38,3 +45,4 @@ class PostResponseSchema(PostBaseSchema):
     author: UserResponseSchema = Field(..., description='Автор публикации')
     is_published: bool = Field(..., description='Опубликовано')
     created_at: datetime = Field(..., description='Дата и время создания')
+    images: List[ImageSchema] = Field(default_factory=list, description='Изображения поста')

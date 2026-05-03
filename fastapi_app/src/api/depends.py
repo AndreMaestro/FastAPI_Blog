@@ -1,4 +1,10 @@
 # User
+from domain.comment.use_cases.add_comment_images import AddCommentImagesUseCase
+from domain.comment.use_cases.delete_comment_image_by_id import DeleteCommentImageByIdUseCase
+from domain.comment.use_cases.delete_comment_images import DeleteCommentImagesUseCase
+from domain.post.use_cases.add_post_images import AddPostImagesUseCase
+from domain.post.use_cases.delete_post_image_by_id import DeletePostImageByIdUseCase
+from domain.post.use_cases.delete_post_images import DeletePostImagesUseCase
 from domain.user.use_cases.get_user_by_username import GetUserByUsernameUseCase
 from domain.user.use_cases.create_user import CreateUserUseCase
 from domain.user.use_cases.update_user import UpdateUserUseCase
@@ -102,6 +108,18 @@ def get_get_all_locations_use_case() -> GetAllLocationsUseCase:
 
 
 # Post factories
+def get_add_post_images_use_case() -> AddPostImagesUseCase:
+    return AddPostImagesUseCase()
+
+
+def get_delete_post_images_use_case() -> DeletePostImagesUseCase:
+    return DeletePostImagesUseCase()
+
+
+def get_delete_post_image_by_id_use_case() -> DeletePostImageByIdUseCase:
+    return DeletePostImageByIdUseCase()
+
+
 def get_get_post_by_id_use_case() -> GetPostByIdUseCase:
     return GetPostByIdUseCase()
 
@@ -141,6 +159,18 @@ def get_delete_comment_use_case() -> DeleteCommentUseCase:
 
 def get_get_all_comments_use_case() -> GetAllCommentsUseCase:
     return GetAllCommentsUseCase()
+
+
+def get_add_comment_images_use_case() -> AddCommentImagesUseCase:
+    return AddCommentImagesUseCase()
+
+
+def get_delete_comment_images_use_case() -> DeleteCommentImagesUseCase:
+    return DeleteCommentImagesUseCase()
+
+
+def get_delete_comment_image_by_id_use_case() -> DeleteCommentImageByIdUseCase:
+    return DeleteCommentImageByIdUseCase()
 
 
 # Auth factories
