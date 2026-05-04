@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.env
+*.db
+.venv
+venv/
+.idea/
+.vscode/
+alembic/versions/__pycache__
